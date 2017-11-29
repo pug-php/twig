@@ -1,0 +1,16 @@
+{
+    "name": "pug/twig",
+    "type": "library",
+    "keywords": ["phug", "jade", "pug", "html", "php", "twig", "symfony"],
+    "require": {
+        "phug/compiler": "^0.5.0"
+    },
+    "require-dev": {
+        "phug/dev-tool": "^0.1.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "./src"
+        }
+    }
+}
