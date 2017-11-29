@@ -50,24 +50,8 @@ class PugToTwigTest extends TestCase
         ]))));
 
         self::assertSame('<ul id="users">{% for user in users %}'.
-            '<li class="user">{#  comment #}{{ user.name | e }}Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
-            '{% endfor %}</ul>', $html);
-
-        $compiler = new Compiler([
-            'compiler_modules' => [TwigExtension::class],
-        ]);
-        $html = str_replace("\n", '', trim($compiler->compile(implode("\n", [
-            'ul#users',
-            '  - for user in users',
-            '    li.user',
-            '      // comment',
-            '      = user.name',
-            '      | Email: #{user.email}',
-            '      a(href=user.url) Home page',
-        ]))));
-
-        self::assertSame('<ul id="users">{% for user in users %}'.
-            '<li class="user">{#  comment #}{{ user.name | e }}Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
+            '<li class="user">{#  comment #}{{ user.name | e }}'.
+            'Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
             '{% endfor %}</ul>', $html);
     }
 
@@ -77,21 +61,7 @@ class PugToTwigTest extends TestCase
      */
     public static function testExtension()
     {
-        $html = str_replace("\n", '', trim(PugToTwig::convert(implode("\n", [
-            'ul#users',
-            '  - for user in users',
-            '    li.user',
-            '      // comment',
-            '      = user.name',
-            '      | Email: #{user.email}',
-            '      a(href=user.url) Home page',
-        ]))));
-
-        self::assertSame('<ul id="users">{% for user in users %}'.
-            '<li class="user">{#  comment #}{{ user.name | e }}Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
-            '{% endfor %}</ul>', $html);
-
-        include_once __DIR__.'/TestRenderer.php';
+        class_exists('\Phug\Renderer') || class_alias('\Phug\Renderer', '\Phug\Renderer');
         new TwigExtension(new \Phug\Renderer());
         $compiler = new Compiler([
             'compiler_modules' => [TwigExtension::class],
@@ -107,7 +77,8 @@ class PugToTwigTest extends TestCase
         ]))));
 
         self::assertSame('<ul id="users">{% for user in users %}'.
-            '<li class="user">{#  comment #}{{ user.name | e }}Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
+            '<li class="user">{#  comment #}{{ user.name | e }}'.
+            'Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
             '{% endfor %}</ul>', $html);
     }
 }

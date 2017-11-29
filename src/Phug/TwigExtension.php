@@ -15,7 +15,7 @@ class TwigExtension extends AbstractCompilerModule
             return;
         }
 
-        /** @var Compiler $container */
+        /* @var Compiler $container */
         PugToTwig::enableTwigFormatter($container);
     }
 }

@@ -15,7 +15,6 @@ use Phug\Formatter\Element\TextElement;
 use Phug\Formatter\ElementInterface;
 use Phug\Formatter\MarkupInterface;
 use Phug\Formatter\Partial\AssignmentHelpersTrait;
-use SplObjectStorage;
 
 class TwigXmlFormat extends AbstractTwigFormat
 {
