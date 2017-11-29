@@ -61,7 +61,7 @@ class PugToTwigTest extends TestCase
      */
     public static function testExtension()
     {
-        class_exists('\Phug\Renderer') || class_alias('\Phug\Renderer', '\Phug\Renderer');
+        class_exists('\Phug\Renderer') || class_alias('\Phug\Parser', '\Phug\Renderer');
         new TwigExtension(new \Phug\Renderer());
         $compiler = new Compiler([
             'compiler_modules' => [TwigExtension::class],
