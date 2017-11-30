@@ -1,5 +1,10 @@
 # PugToTwig
 
+[![Latest Stable Version](https://poser.pugx.org/pug/twig/v/stable.png)](https://packagist.org/packages/pug/twig)
+[![Build Status](https://travis-ci.org/pug-php/twig.svg?branch=master)](https://travis-ci.org/pug-php/twig)
+[![Test Coverage](https://codeclimate.com/github/pug-php/twig/badges/coverage.svg)](https://codeclimate.com/github/pug-php/twig/coverage)
+[![StyleCI](https://styleci.io/repos/112490740/shield?branch=master)](https://styleci.io/repos/112490740)
+
 This package can convert basic pug codes into **Twig** code. Caution,
 this package should not be used to handle **Pug** templates in Symfony,
 the right way to do it is to use
