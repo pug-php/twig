@@ -3,7 +3,6 @@
 namespace Phug;
 
 use Phug\Util\ModuleContainerInterface;
-use PugToTwig;
 
 class TwigExtension extends AbstractCompilerModule
 {
