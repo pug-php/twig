@@ -15,7 +15,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         $nestedCodes = [];
         $codeBlocks = [];
         $this
-            ->setOptionsDefaults([
+            ->setOptionsRecursive([
                 'php_token_handlers' => [
                     T_VARIABLE => function ($string) {
                         return $string;
@@ -29,7 +29,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 'html_expression_escape' => '%s | e',
                 'php_handle_code'        => function ($input) use (&$formatter, &$nestedCodes, &$codeBlocks) {
                     $pugModuleName = '$'.$formatter->getOption('dependencies_storage');
-                    if (strpos($input, $pugModuleName) !== false) {
+                    if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
                         $input = preg_replace_callback('/\{\[block:(\d+)\]\}/', function ($match) use (&$codeBlocks) {
                             return ' ?>'.$codeBlocks[intval($match[1])].'<?php ';
                         }, $input);
@@ -61,7 +61,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 },
                 'php_display_code' => function ($input) use (&$formatter) {
                     $pugModuleName = '$'.$formatter->getOption('dependencies_storage');
-                    if (strpos($input, $pugModuleName) !== false) {
+                    if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
                         return "<?= $input ?>";
                     }
 
@@ -71,12 +71,23 @@ abstract class AbstractTwigFormat extends XhtmlFormat
             ]);
     }
 
+    protected function mustBeHandleWithPhp($input, $pugModuleName)
+    {
+        return strpos($input, $pugModuleName) !== false ||
+            strpos($input, '$__pug_mixins') !== false ||
+            strpos($input, '$__pug_children') !== false;
+    }
+
     protected function formatAttributes(MarkupElement $element)
     {
         $code = '';
 
         foreach ($element->getAttributes() as $attribute) {
             $code .= $this->format($attribute);
+        }
+
+        foreach ($element->getAssignments() as $assignment) {
+            $code .= $this->format($assignment);
         }
 
         return $code;

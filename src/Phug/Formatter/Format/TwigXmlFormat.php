@@ -10,7 +10,6 @@ use Phug\Formatter\Element\AttributeElement;
 use Phug\Formatter\Element\CodeElement;
 use Phug\Formatter\Element\ExpressionElement;
 use Phug\Formatter\Element\MarkupElement;
-use Phug\Formatter\Element\MixinCallElement;
 use Phug\Formatter\Element\TextElement;
 use Phug\Formatter\ElementInterface;
 use Phug\Formatter\MarkupInterface;
@@ -32,12 +31,12 @@ class TwigXmlFormat extends AbstractTwigFormat
     {
         parent::__construct($formatter);
 
+        $defaults = [];
+        foreach (['attributes_mapping', 'assignment_handlers', 'attribute_assignments'] as $option) {
+            $defaults[$option] = ($formatter->hasOption($option) ? $formatter->getOption($option) : null) ?: [];
+        }
         $this
-            ->setOptionsDefaults([
-                'attributes_mapping'    => [],
-                'assignment_handlers'   => [],
-                'attribute_assignments' => [],
-            ])
+            ->setOptionsDefaults($defaults)
             ->registerHelper('available_attribute_assignments', [])
             ->addPatterns([
                 'open_pair_tag'             => static::OPEN_PAIR_TAG,
@@ -72,26 +71,6 @@ class TwigXmlFormat extends AbstractTwigFormat
         $availableAssignments[] = $name;
 
         return $this->registerHelper('available_attribute_assignments', $availableAssignments);
-    }
-
-    public function requireHelper($name)
-    {
-        $provider = $this->formatter
-            ->getDependencies()
-            ->getProvider(
-                $this->helperName('available_attribute_assignments')
-            );
-        $required = $provider->isRequired();
-
-        parent::requireHelper($name);
-
-        if (!$required && $provider->isRequired()) {
-            foreach ($this->getHelper('available_attribute_assignments') as $assignment) {
-                $this->requireHelper($assignment.'_attribute_assignment');
-            }
-        }
-
-        return $this;
     }
 
     public function __invoke(ElementInterface $element)
@@ -131,25 +110,6 @@ class TwigXmlFormat extends AbstractTwigFormat
 
     public function isWhiteSpaceSensitive(MarkupInterface $element)
     {
-        return false;
-    }
-
-    protected function hasNonStaticAttributes(MarkupInterface $element)
-    {
-        if ($element instanceof MarkupElement || $element instanceof MixinCallElement) {
-            foreach ($element->getAttributes() as $attribute) {
-                if ($attribute->hasStaticMember('value')) {
-                    continue;
-                }
-                if ($attribute->getValue() instanceof ExpressionElement &&
-                    $attribute->getValue()->hasStaticMember('value')) {
-                    continue;
-                }
-
-                return true;
-            }
-        }
-
         return false;
     }
 
@@ -289,69 +249,10 @@ class TwigXmlFormat extends AbstractTwigFormat
         );
         $attributes->removeAll($attributes);
 
-        $assignments = iterator_to_array($markup->getAssignments());
-        array_walk(
-            $assignments,
-            function (AssignmentElement $assignment) {
-                $this->throwException(
-                    'Unable to handle '.$assignment->getName().' assignment',
-                    $assignment
-                );
-            }
-        );
-
         if (count($arguments)) {
             $newElements[] = $this->attributesAssignmentsFromPairs($arguments);
         }
 
         return implode('', array_map([$this, 'format'], $newElements));
-    }
-
-    protected function hasDuplicateAttributeNames(MarkupInterface $element)
-    {
-        if ($element instanceof MarkupElement || $element instanceof MixinCallElement) {
-            $names = [];
-            foreach ($element->getAttributes() as $attribute) {
-                $name = $attribute->getName();
-                if (($name instanceof ExpressionElement && !$name->hasStaticValue()) || in_array($name, $names)) {
-                    return true;
-                }
-
-                $names[] = $name;
-            }
-        }
-
-        return false;
-    }
-
-    protected function formatMarkupElement(MarkupElement $element)
-    {
-        $tag = $this->format($element->getName());
-        $saveAttributes = clone $element->getAttributes();
-        $saveAssignments = clone $element->getAssignments();
-        $attributes = $this->formatAttributes($element);
-        $dirtyAttributes = $element->getAttributes();
-        $dirtyAttributes->removeAll($dirtyAttributes);
-        $dirtyAttributes->addAll($saveAttributes);
-        $dirtyAssignments = $element->getAssignments();
-        $dirtyAssignments->removeAll($dirtyAssignments);
-        $dirtyAssignments->addAll($saveAssignments);
-
-        $tag = $this->isSelfClosingTag($element)
-            ? $this->pattern(
-                $element->isAutoClosed() && $this->hasPattern('explicit_closing_tag')
-                    ? 'explicit_closing_tag'
-                    : 'self_closing_tag',
-                $tag.$attributes
-            )
-            : $this->formatPairTag(
-                $this->pattern('open_pair_tag', $tag.$attributes),
-                $this->pattern('close_pair_tag', $tag),
-                $element
-            );
-
-        return !$element->isAutoClosed() && $this->isBlockTag($element)
-            ? $this->getIndent().$tag.$this->getNewLine()
-            : $tag;
     }
 }
