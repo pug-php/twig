@@ -30,9 +30,13 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 'php_handle_code'        => function ($input) use (&$formatter, &$nestedCodes, &$codeBlocks) {
                     $pugModuleName = '$'.$formatter->getOption('dependencies_storage');
                     if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
-                        $input = preg_replace_callback('/\{\[block:(\d+)\]\}/', function ($match) use (&$codeBlocks) {
-                            return ' ?>'.$codeBlocks[intval($match[1])].'<?php ';
-                        }, $input);
+                        $input = preg_replace_callback(
+                            '/\{\[block:(\d+)\]\}/',
+                            function ($match) use (&$codeBlocks) {
+                                return ' ?>'.$codeBlocks[intval($match[1])].'<?php ';
+                            },
+                            $input
+                        );
 
                         return "<?php $input ?>";
                     }
@@ -41,11 +45,15 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                     $statement = $statement === 'each' ? 'for' : $statement;
                     $input = $statement.' '.$input;
                     $hasBlocks = false;
-                    $input = preg_replace_callback('/\{\[block:(\d+)\]\}/', function ($match) use (&$codeBlocks, &$hasBlocks) {
-                        $hasBlocks = true;
+                    $input = preg_replace_callback(
+                        '/\{\[block:(\d+)\]\}/',
+                        function ($match) use (&$codeBlocks, &$hasBlocks) {
+                            $hasBlocks = true;
 
-                        return ' %}'.$codeBlocks[intval($match[1])].'{% ';
-                    }, $input);
+                            return ' %}'.$codeBlocks[intval($match[1])].'{% ';
+                        },
+                        $input
+                    );
                     if ($hasBlocks) {
                         $input .= 'end'.$statement;
                     }

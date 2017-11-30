@@ -10,7 +10,7 @@ use Phug\TwigExtension;
 use PugToTwig;
 
 /**
- * @coversDefaultClass PugToTwig
+ * @coversDefaultClass \Phug\PugToTwig
  */
 class PugToTwigTest extends TestCase
 {
