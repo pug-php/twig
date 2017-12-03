@@ -3,3 +3,4 @@ composer.lock
 /vendor/
 /coverage/
 coverage.xml
+.idea
