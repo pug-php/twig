@@ -14,6 +14,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
 
         $nestedCodes = [];
         $codeBlocks = [];
+        $phpMode = true;
         $this
             ->setOptionsRecursive([
                 'php_token_handlers' => [
@@ -27,7 +28,10 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 'string_attribute'       => '%s',
                 'expression_in_text'     => '%s',
                 'html_expression_escape' => '%s | e',
-                'php_handle_code'        => function ($input) use (&$formatter, &$nestedCodes, &$codeBlocks) {
+                'php_nested_html'        => function ($input) use ($phpMode) {
+                    return $phpMode ? " ?>$input<?php " : " %}$input{% ";
+                },
+                'php_handle_code'        => function ($input) use (&$phpMode, &$formatter, &$nestedCodes, &$codeBlocks) {
                     $pugModuleName = '$'.$formatter->getOption('dependencies_storage');
                     if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
                         $input = preg_replace_callback(
@@ -37,11 +41,13 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                             },
                             $input
                         );
+                        $phpMode = true;
 
                         return "<?php $input ?>";
                     }
 
-                    list($statement, $input) = explode(' ', $input, 2);
+                    $phpMode = false;
+                    list($statement, $input) = array_pad(explode(' ', $input, 2), 2, '');
                     $statement = $statement === 'each' ? 'for' : $statement;
                     $input = $statement.' '.$input;
                     $hasBlocks = false;

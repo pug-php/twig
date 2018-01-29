@@ -31,6 +31,7 @@ class PugToTwigTest extends TestCase
     }
 
     /**
+     * @group i
      * @covers ::convert
      * @covers \Phug\Formatter\AbstractTwigFormat::__construct
      * @covers \Phug\Formatter\AbstractTwigFormat::mustBeHandleWithPhp
@@ -99,6 +100,36 @@ class PugToTwigTest extends TestCase
             '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
             $html
         );
+
+        $html = static::render(implode("\n", [
+            'if false',
+            '  | A',
+            'else',
+            '  if true',
+            '    | B',
+            '  else',
+            '    | C',
+        ]));
+
+        self::assertSame(
+            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+            $html
+        );
+
+//        $html = static::render(implode("\n", [
+//            'if 1 != 1',
+//            '  | A',
+//            '- else',
+//            '  - if 1 == 1',
+//            '    | B',
+//            '  - else',
+//            '    | C',
+//        ]));
+//
+//        self::assertSame(
+//            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+//            $html
+//        );
     }
 
     /**
