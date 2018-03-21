@@ -31,7 +31,6 @@ class PugToTwigTest extends TestCase
     }
 
     /**
-     * @group i
      * @covers ::convert
      * @covers \Phug\Formatter\AbstractTwigFormat::__construct
      * @covers \Phug\Formatter\AbstractTwigFormat::mustBeHandleWithPhp
