@@ -89,7 +89,7 @@ class PugToTwigTest extends TestCase
             '    block',
             'section',
             '  div: +foo()',
-            '    span bar'
+            '    span bar',
         ]));
 
         self::assertSame('<section><div><p>{{ myVar | e }}<span>bar</span></p></div></section>', $html);
@@ -102,7 +102,7 @@ class PugToTwigTest extends TestCase
             '    div',
             '      block',
             '+foo()',
-            '  span bar'
+            '  span bar',
         ]));
 
         self::assertSame('{% if (true) %}<span>bar</span>{% else %}<div><span>bar</span></div>{% endif %}', $html);

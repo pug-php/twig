@@ -98,6 +98,28 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         return $code;
     }
 
+    protected function deduplicatePhpTags($commentPattern, &$content, &$childContent)
+    {
+        // @codeCoverageIgnoreStart
+        $content = preg_replace('/\\s\\?>$/', '', $content);
+        $childContent = preg_replace('/^<\\?(?:php)?\\s/', '', $childContent);
+        if ($commentPattern &&
+            ($pos = mb_strpos($childContent, $commentPattern)) !== false && (
+                ($end = mb_strpos($childContent, '?>')) === false ||
+                $pos < $end
+            ) &&
+            preg_match('/\\}\\s*$/', $content)
+        ) {
+            $content = preg_replace(
+                '/\\}\\s*$/',
+                preg_replace('/\\?><\\?php(?:php)?(\s+\\?><\\?php(?:php)?)*/', '\\\\0', $childContent, 1),
+                $content
+            );
+            $childContent = '';
+        }
+        // @codeCoverageIgnoreEnd
+    }
+
     protected function formatTwigChildElement($child, $previous, &$content, $commentPattern)
     {
         $childContent = $this->formatter->format($child);
@@ -106,22 +128,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
             $previous instanceof CodeElement &&
             $previous->isCodeBlock()
         ) {
-            $content = preg_replace('/\\s\\?>$/', '', $content);
-            $childContent = preg_replace('/^<\\?(?:php)?\\s/', '', $childContent);
-            if ($commentPattern &&
-                ($pos = mb_strpos($childContent, $commentPattern)) !== false && (
-                    ($end = mb_strpos($childContent, '?>')) === false ||
-                    $pos < $end
-                ) &&
-                preg_match('/\\}\\s*$/', $content)
-            ) {
-                $content = preg_replace(
-                    '/\\}\\s*$/',
-                    preg_replace('/\\?><\\?php(?:php)?(\s+\\?><\\?php(?:php)?)*/', '\\\\0', $childContent, 1),
-                    $content
-                );
-                $childContent = '';
-            }
+            $this->deduplicatePhpTags($commentPattern, $content, $childContent);
         }
 
         if (preg_match('/^\{% else/', $childContent)) {
