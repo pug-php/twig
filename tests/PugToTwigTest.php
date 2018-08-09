@@ -33,8 +33,10 @@ class PugToTwigTest extends TestCase
     /**
      * @covers ::convert
      * @covers \Phug\Formatter\AbstractTwigFormat::__construct
+     * @covers \Phug\Formatter\AbstractTwigFormat::replaceTwigBlocks()
      * @covers \Phug\Formatter\AbstractTwigFormat::mustBeHandleWithPhp
      * @covers \Phug\Formatter\AbstractTwigFormat::formatAttributes
+     * @covers \Phug\Formatter\AbstractTwigFormat::formatElementChildren
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__construct
      * @covers \Phug\Formatter\Format\TwigXmlFormat::addAttributeAssignment
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__invoke

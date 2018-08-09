@@ -36,50 +36,6 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         'with',
     ];
 
-    protected function replaceTwigBlocks($input, $wrap = false)
-    {
-        $pugModuleName = '$'.$this->formatter->getOption('dependencies_storage');
-        if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
-            $input = preg_replace_callback(
-                '/\{\[block:(\d+)\]\}/',
-                function ($match) {
-                    return ' ?>'.$this->codeBlocks[intval($match[1])].'<?php ';
-                },
-                $input
-            );
-            $this->phpMode = true;
-
-            return $wrap ? "<?php $input ?>" : $input;
-        }
-
-        $this->phpMode = false;
-        $statement = $input;
-        $parts = explode(' ', $input, 2);
-        if (count($parts) === 2) {
-            list($statement, $input) = $parts;
-            $statement = $statement === 'each' ? 'for' : $statement;
-            $input = "$statement $input";
-        }
-        $hasBlocks = false;
-        $input = preg_replace_callback(
-            '/\{\[block:(\d+)\]\}/',
-            function ($match) use (&$hasBlocks) {
-                $hasBlocks = true;
-
-                return ' %}'.$this->codeBlocks[intval($match[1])].'{% ';
-            },
-            $input
-        );
-        if ($hasBlocks) {
-            $statement = preg_replace('/^([^\\{]+)\\{.*$/', '$1', $statement);
-            if (in_array($statement, $this->statements)) {
-                $input .= 'end'.preg_replace('/^else/', 'if', $statement);
-            }
-        }
-
-        return $wrap && trim($input) !== '' ? "{% $input %}" : $input;
-    }
-
     public function __construct(Formatter $formatter = null)
     {
         parent::__construct($formatter);
@@ -192,5 +148,49 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         $this->formatter->setLevel($indentLevel);
 
         return $content;
+    }
+
+    protected function replaceTwigBlocks($input, $wrap = false)
+    {
+        $pugModuleName = '$'.$this->formatter->getOption('dependencies_storage');
+        if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
+            $input = preg_replace_callback(
+                '/\{\[block:(\d+)\]\}/',
+                function ($match) {
+                    return ' ?>'.$this->codeBlocks[intval($match[1])].'<?php ';
+                },
+                $input
+            );
+            $this->phpMode = true;
+
+            return $wrap ? "<?php $input ?>" : $input;
+        }
+
+        $this->phpMode = false;
+        $statement = $input;
+        $parts = explode(' ', $input, 2);
+        if (count($parts) === 2) {
+            list($statement, $input) = $parts;
+            $statement = $statement === 'each' ? 'for' : $statement;
+            $input = "$statement $input";
+        }
+        $hasBlocks = false;
+        $input = preg_replace_callback(
+            '/\{\[block:(\d+)\]\}/',
+            function ($match) use (&$hasBlocks) {
+                $hasBlocks = true;
+
+                return ' %}'.$this->codeBlocks[intval($match[1])].'{% ';
+            },
+            $input
+        );
+        if ($hasBlocks) {
+            $statement = preg_replace('/^([^\\{]+)\\{.*$/', '$1', $statement);
+            if (in_array($statement, $this->statements)) {
+                $input .= 'end'.preg_replace('/^else/', 'if', $statement);
+            }
+        }
+
+        return $wrap && trim($input) !== '' ? "{% $input %}" : $input;
     }
 }
