@@ -9,7 +9,6 @@ use Phug\Formatter\Format\XhtmlFormat;
 
 abstract class AbstractTwigFormat extends XhtmlFormat
 {
-    protected $nestedCodes = [];
     protected $codeBlocks = [];
     protected $phpMode = true;
     protected $statements = [
@@ -40,7 +39,6 @@ abstract class AbstractTwigFormat extends XhtmlFormat
     {
         parent::__construct($formatter);
 
-        $this->nestedCodes = [];
         $this->codeBlocks = [];
         $this->phpMode = true;
         $this
@@ -56,9 +54,6 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 'string_attribute'       => '%s',
                 'expression_in_text'     => '%s',
                 'html_expression_escape' => '%s | e',
-                'php_nested_html'        => function ($input) {
-                    return $this->phpMode ? " ?>$input<?php " : " %}$input{% ";
-                },
                 'php_handle_code'        => function ($input) {
                     return $this->replaceTwigBlocks($input, true);
                 },
@@ -103,6 +98,39 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         return $code;
     }
 
+    protected function formatTwigChildElement($child, $previous, &$content, $commentPattern)
+    {
+        $childContent = $this->formatter->format($child);
+
+        if ($child instanceof CodeElement &&
+            $previous instanceof CodeElement &&
+            $previous->isCodeBlock()
+        ) {
+            $content = preg_replace('/\\s\\?>$/', '', $content);
+            $childContent = preg_replace('/^<\\?(?:php)?\\s/', '', $childContent);
+            if ($commentPattern &&
+                ($pos = mb_strpos($childContent, $commentPattern)) !== false && (
+                    ($end = mb_strpos($childContent, '?>')) === false ||
+                    $pos < $end
+                ) &&
+                preg_match('/\\}\\s*$/', $content)
+            ) {
+                $content = preg_replace(
+                    '/\\}\\s*$/',
+                    preg_replace('/\\?><\\?php(?:php)?(\s+\\?><\\?php(?:php)?)*/', '\\\\0', $childContent, 1),
+                    $content
+                );
+                $childContent = '';
+            }
+        }
+
+        if (preg_match('/^\{% else/', $childContent)) {
+            $content = preg_replace('/\{% end(if)+ %\}$/', '', $content);
+        }
+
+        return $this->replaceTwigBlocks($childContent, false);
+    }
+
     protected function formatElementChildren(ElementInterface $element, $indentStep = 1)
     {
         $indentLevel = $this->formatter->getLevel();
@@ -111,62 +139,26 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         $previous = null;
         $commentPattern = $this->getOption('debug');
         foreach ($this->getChildrenIterator($element) as $child) {
-            if (!($child instanceof ElementInterface)) {
-                continue;
+            if ($child instanceof ElementInterface) {
+                $content .= $this->formatTwigChildElement($child, $previous, $content, $commentPattern);
+                $previous = $child;
             }
-
-            $childContent = $this->formatter->format($child);
-
-            if ($child instanceof CodeElement &&
-                $previous instanceof CodeElement &&
-                $previous->isCodeBlock()
-            ) {
-                $content = preg_replace('/\\s\\?>$/', '', $content);
-                $childContent = preg_replace('/^<\\?(?:php)?\\s/', '', $childContent);
-                if ($commentPattern &&
-                    ($pos = mb_strpos($childContent, $commentPattern)) !== false && (
-                        ($end = mb_strpos($childContent, '?>')) === false ||
-                        $pos < $end
-                    ) &&
-                    preg_match('/\\}\\s*$/', $content)
-                ) {
-                    $content = preg_replace(
-                        '/\\}\\s*$/',
-                        preg_replace('/\\?><\\?php(?:php)?(\s+\\?><\\?php(?:php)?)*/', '\\\\0', $childContent, 1),
-                        $content
-                    );
-                    $childContent = '';
-                }
-            }
-
-            if (preg_match('/^\{% else/', $childContent)) {
-                $content = preg_replace('/\{% end(if)+ %\}$/', '', $content);
-            }
-            $content .= $this->replaceTwigBlocks($childContent);
-            $previous = $child;
         }
         $this->formatter->setLevel($indentLevel);
 
         return $content;
     }
 
-    protected function replaceTwigBlocks($input, $wrap = false)
+    protected function replaceTwigPhpBlocks($input, $wrap)
     {
-        $pugModuleName = '$'.$this->formatter->getOption('dependencies_storage');
-        if ($this->mustBeHandleWithPhp($input, $pugModuleName)) {
-            $input = preg_replace_callback(
-                '/\{\[block:(\d+)\]\}/',
-                function ($match) {
-                    return ' ?>'.$this->codeBlocks[intval($match[1])].'<?php ';
-                },
-                $input
-            );
-            $this->phpMode = true;
+        $input = $this->restoreBlockSubstitutes($input);
+        $this->phpMode = true;
 
-            return $wrap ? "<?php $input ?>" : $input;
-        }
+        return $wrap ? "<?php $input ?>" : $input;
+    }
 
-        $this->phpMode = false;
+    protected function extractStatement(&$input)
+    {
         $statement = $input;
         $parts = explode(' ', $input, 2);
         if (count($parts) === 2) {
@@ -174,16 +166,29 @@ abstract class AbstractTwigFormat extends XhtmlFormat
             $statement = $statement === 'each' ? 'for' : $statement;
             $input = "$statement $input";
         }
-        $hasBlocks = false;
-        $input = preg_replace_callback(
+
+        return $statement;
+    }
+
+    protected function restoreBlockSubstitutes($input, $pattern = ' ?>%s<?php ', &$hasBlocks = null)
+    {
+        return preg_replace_callback(
             '/\{\[block:(\d+)\]\}/',
-            function ($match) use (&$hasBlocks) {
+            function ($match) use ($pattern, &$hasBlocks) {
                 $hasBlocks = true;
 
-                return ' %}'.$this->codeBlocks[intval($match[1])].'{% ';
+                return sprintf($pattern, $this->codeBlocks[intval($match[1])]);
             },
             $input
         );
+    }
+
+    protected function replaceTwigTemplateBlocks($input, $wrap)
+    {
+        $this->phpMode = false;
+        $statement = $this->extractStatement($input);
+        $hasBlocks = false;
+        $input = $this->restoreBlockSubstitutes($input, ' %%}%s{%% ', $hasBlocks);
         if ($hasBlocks) {
             $statement = preg_replace('/^([^\\{]+)\\{.*$/', '$1', $statement);
             if (in_array($statement, $this->statements)) {
@@ -192,5 +197,12 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         }
 
         return $wrap && trim($input) !== '' ? "{% $input %}" : $input;
+    }
+
+    protected function replaceTwigBlocks($input, $wrap)
+    {
+        return $this->mustBeHandleWithPhp($input, '$'.$this->formatter->getOption('dependencies_storage'))
+            ? $this->replaceTwigPhpBlocks($input, $wrap)
+            : $this->replaceTwigTemplateBlocks($input, $wrap);
     }
 }
