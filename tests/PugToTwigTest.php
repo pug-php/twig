@@ -110,7 +110,8 @@ class PugToTwigTest extends TestCase
         ]));
 
         self::assertSame(
-            '{% for apple in apples %}<p>{{ apple | e }}</p>{% endfor %}{% for banana in bananas %}<p>{{ banana | e }}</p>{% endfor %}',
+            '{% for apple in apples %}<p>{{ apple | e }}</p>{% endfor %}'.
+            '{% for banana in bananas %}<p>{{ banana | e }}</p>{% endfor %}',
             $html
         );
 
