@@ -101,6 +101,18 @@ class PugToTwigTest extends TestCase
         );
 
         $html = static::render(implode("\n", [
+            '- for apple in apples',
+            '  p= apple',
+            '- for banana in bananas',
+            '  p= banana',
+        ]));
+
+        self::assertSame(
+            '{% for apple in apples %}<p>{{ apple | e }}</p>{% endfor %}{% for banana in bananas %}<p>{{ banana | e }}</p>{% endfor %}',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
             'if false',
             '  | A',
             'else',
@@ -111,24 +123,35 @@ class PugToTwigTest extends TestCase
         ]));
 
         self::assertSame(
-            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+            '{% if (false) %}A{% else %}{% if (true) %}B{% else %}C{% endif %}{% endif %}',
             $html
         );
 
-//        $html = static::render(implode("\n", [
-//            'if 1 != 1',
-//            '  | A',
-//            '- else',
-//            '  - if 1 == 1',
-//            '    | B',
-//            '  - else',
-//            '    | C',
-//        ]));
-//
-//        self::assertSame(
-//            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
-//            $html
-//        );
+        $html = static::render(implode("\n", [
+            'if 1 != 1',
+            '  | A',
+            'elseif 1 == 1',
+            '  | B',
+            'else',
+            '  | C',
+        ]));
+
+        self::assertSame(
+            '{% if (1 != 1) %}A{% elseif (1 == 1) %}B{% else %}C{% endif %}',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            'if 1 == 1',
+            '  div',
+            '    if 1 != 2',
+            '      strong Bye',
+        ]));
+
+        self::assertSame(
+            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+            $html
+        );
     }
 
     /**
