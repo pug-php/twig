@@ -33,8 +33,15 @@ class PugToTwigTest extends TestCase
     /**
      * @covers ::convert
      * @covers \Phug\Formatter\AbstractTwigFormat::__construct
+     * @covers \Phug\Formatter\AbstractTwigFormat::replaceTwigBlocks
+     * @covers \Phug\Formatter\AbstractTwigFormat::restoreBlockSubstitutes
+     * @covers \Phug\Formatter\AbstractTwigFormat::replaceTwigPhpBlocks
+     * @covers \Phug\Formatter\AbstractTwigFormat::replaceTwigTemplateBlocks
+     * @covers \Phug\Formatter\AbstractTwigFormat::extractStatement
      * @covers \Phug\Formatter\AbstractTwigFormat::mustBeHandleWithPhp
      * @covers \Phug\Formatter\AbstractTwigFormat::formatAttributes
+     * @covers \Phug\Formatter\AbstractTwigFormat::formatElementChildren
+     * @covers \Phug\Formatter\AbstractTwigFormat::formatTwigChildElement
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__construct
      * @covers \Phug\Formatter\Format\TwigXmlFormat::addAttributeAssignment
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__invoke
@@ -57,14 +64,14 @@ class PugToTwigTest extends TestCase
             'ul#users',
             '  - for user in users',
             '    li.user',
-            '      // comment',
+            '      //comment',
             '      = user.name',
             '      | Email: #{user.email}',
             '      a(href=user.url) Home page',
         ]));
 
         self::assertSame('<ul id="users">{% for user in users %}'.
-            '<li class="user">{#  comment #}{{ user.name | e }}'.
+            '<li class="user">{# comment #}{{ user.name | e }}'.
             'Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
             '{% endfor %}</ul>', $html);
 
@@ -75,6 +82,30 @@ class PugToTwigTest extends TestCase
         ]));
 
         self::assertSame('<p>{{ myVar | e }}</p>', $html);
+
+        $html = static::render(implode("\n", [
+            'mixin foo()',
+            '  p=myVar',
+            '    block',
+            'section',
+            '  div: +foo()',
+            '    span bar',
+        ]));
+
+        self::assertSame('<section><div><p>{{ myVar | e }}<span>bar</span></p></div></section>', $html);
+
+        $html = static::render(implode("\n", [
+            'mixin foo()',
+            '  if true',
+            '    block',
+            '  else',
+            '    div',
+            '      block',
+            '+foo()',
+            '  span bar',
+        ]));
+
+        self::assertSame('{% if (true) %}<span>bar</span>{% else %}<div><span>bar</span></div>{% endif %}', $html);
 
         $html = static::render(implode("\n", [
             'mixin foo()',
@@ -99,12 +130,67 @@ class PugToTwigTest extends TestCase
             '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
             $html
         );
+
+        $html = static::render(implode("\n", [
+            '- for apple in apples',
+            '  p= apple',
+            '- for banana in bananas',
+            '  p= banana',
+        ]));
+
+        self::assertSame(
+            '{% for apple in apples %}<p>{{ apple | e }}</p>{% endfor %}'.
+            '{% for banana in bananas %}<p>{{ banana | e }}</p>{% endfor %}',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            'if false',
+            '  | A',
+            'else',
+            '  if true',
+            '    | B',
+            '  else',
+            '    | C',
+        ]));
+
+        self::assertSame(
+            '{% if (false) %}A{% else %}{% if (true) %}B{% else %}C{% endif %}{% endif %}',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            'if 1 != 1',
+            '  | A',
+            'elseif 1 == 1',
+            '  | B',
+            'else',
+            '  | C',
+        ]));
+
+        self::assertSame(
+            '{% if (1 != 1) %}A{% elseif (1 == 1) %}B{% else %}C{% endif %}',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            'if 1 == 1',
+            '  div',
+            '    if 1 != 2',
+            '      strong Bye',
+        ]));
+
+        self::assertSame(
+            '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+            $html
+        );
     }
 
     /**
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isBlockTag
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isWhiteSpaceSensitive
+     * @covers \Phug\Formatter\Format\TwigXhtmlFormat::isBlockTag
      */
     public static function testPreHandle()
     {
@@ -129,10 +215,12 @@ class PugToTwigTest extends TestCase
             'doctype html',
             'img',
             'img/',
+            'pre="hello"',
+            'pre="hello" | upper',
         ]));
 
         self::assertSame(
-            '<!DOCTYPE html><img><img/>',
+            '<!DOCTYPE html><img><img/><pre>hello</pre><pre>{{ "hello" | upper | e }}</pre>',
             $html
         );
     }
@@ -146,6 +234,13 @@ class PugToTwigTest extends TestCase
 
         self::assertSame(
             '<div bar="bar" biz="0" boz="0"></div>',
+            $html
+        );
+
+        $html = static::render('div(foo="", \'bar\'=true)');
+
+        self::assertSame(
+            '<div foo="" bar="bar"></div>',
             $html
         );
     }
@@ -167,10 +262,14 @@ class PugToTwigTest extends TestCase
         $html = static::render(implode("\n", [
             'doctype xml',
             'img',
+            'article',
+            '  item(name=var)',
+            '  item(name="bar")',
         ]));
 
         self::assertSame(
-            '<?xml version="1.0" encoding="utf-8" ?><img></img>',
+            '<?xml version="1.0" encoding="utf-8" ?><img></img>'.
+            '<article><item name="{{ var | e }}"></item><item name="bar"></item></article>',
             $html
         );
     }
@@ -196,6 +295,7 @@ class PugToTwigTest extends TestCase
     }
 
     /**
+     * @covers \Phug\Formatter\AbstractTwigFormat::formatAttributes
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__construct
      * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAttributeElement
      * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAssignmentElement
