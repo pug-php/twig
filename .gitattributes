@@ -22,3 +22,4 @@
 /.gitignore         export-ignore
 /.travis.yml        export-ignore
 /*.md               export-ignore
+/phpunit.xml        export-ignore
