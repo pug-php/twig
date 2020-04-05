@@ -6,11 +6,14 @@ git:
 env:
   global:
     - COMPOSER_FLAGS=''
+    - CC_TEST_REPORTER_ID=a1d38a352ba09d38aa28f376914385fe2434b0e7baee495ab823adb5e670ebb5
+    - COVERAGE=''
 
 matrix:
   include:
     - php: nightly
     - php: 7.4
+      env: COVERAGE=on
     - php: 7.3
     - php: 7.2
     - php: 7.1
@@ -24,12 +27,20 @@ install:
   - travis_retry composer self-update
   - travis_retry composer install ${COMPOSER_FLAGS} --no-interaction
 
+before_script:
+  - if [[ "$COVERAGE" = "on" ]]; then curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter; fi;
+  - if [[ "$COVERAGE" = "on" ]]; then chmod +x ./cc-test-reporter; fi;
+  - if [[ "$COVERAGE" = "on" ]]; then ./cc-test-reporter before-build; fi;
+
 script:
-  - vendor/bin/phug-dev check --report --coverage-php-version=5.6
+  - vendor/bin/phpunit -c vendor/phug/dev-tool/config --coverage-text --coverage-clover=coverage.xml
+
+after_script:
+  - if [[ "$COVERAGE" = "on" ]]; then cp coverage.xml clover.xml; fi;
+  - if [[ "$COVERAGE" = "on" ]]; then ./cc-test-reporter after-build --coverage-input-type clover --exit-code $TRAVIS_TEST_RESULT; fi;
+
+after_success:
+  - if [[ "$COVERAGE" = "on" ]]; then bash <(curl -s https://codecov.io/bash); fi;
 
 notifications:
   slack: phug:nzXFnxhU14RWK2EQSDL0u08z
-
-addons:
-  code_climate:
-    repo_token: a1d38a352ba09d38aa28f376914385fe2434b0e7baee495ab823adb5e670ebb5
