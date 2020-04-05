@@ -53,6 +53,7 @@ abstract class AbstractTwigFormat extends XhtmlFormat
                 'class_attribute'        => '%s',
                 'string_attribute'       => '%s',
                 'expression_in_text'     => '%s',
+                'expression_in_bool'     => '%s',
                 'html_expression_escape' => '%s | e',
                 'php_handle_code'        => function ($input) {
                     return $this->replaceTwigBlocks($input, true);
