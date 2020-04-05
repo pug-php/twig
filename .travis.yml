@@ -6,7 +6,6 @@ git:
 env:
   global:
     - COMPOSER_FLAGS=''
-    - CC_TEST_REPORTER_ID=a1d38a352ba09d38aa28f376914385fe2434b0e7baee495ab823adb5e670ebb5
 
 matrix:
   include:
@@ -30,3 +29,7 @@ script:
 
 notifications:
   slack: phug:nzXFnxhU14RWK2EQSDL0u08z
+
+addons:
+  code_climate:
+    repo_token: a1d38a352ba09d38aa28f376914385fe2434b0e7baee495ab823adb5e670ebb5

@@ -99,9 +99,11 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         return $code;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function deduplicatePhpTags($commentPattern, &$content, &$childContent)
     {
-        // @codeCoverageIgnoreStart
         $content = preg_replace('/\\s\\?>$/', '', $content);
         $childContent = preg_replace('/^<\\?(?:php)?\\s/', '', $childContent);
         if ($commentPattern &&
@@ -118,7 +120,6 @@ abstract class AbstractTwigFormat extends XhtmlFormat
             );
             $childContent = '';
         }
-        // @codeCoverageIgnoreEnd
     }
 
     protected function formatTwigChildElement($child, $previous, &$content, $commentPattern)
