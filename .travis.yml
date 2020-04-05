@@ -33,7 +33,7 @@ before_script:
   - if [[ "$COVERAGE" = "on" ]]; then ./cc-test-reporter before-build; fi;
 
 script:
-  - vendor/bin/phpunit -c vendor/phug/dev-tool/config --coverage-text --coverage-clover=coverage.xml
+  - vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
 
 after_script:
   - if [[ "$COVERAGE" = "on" ]]; then cp coverage.xml clover.xml; fi;
