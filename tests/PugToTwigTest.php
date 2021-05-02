@@ -193,7 +193,6 @@ class PugToTwigTest extends TestCase
     /**
      * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAttributeElement
      * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAttributeFlag
-     * @group y
      */
     public static function testFlagAttribute()
     {

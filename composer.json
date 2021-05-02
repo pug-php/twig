@@ -10,7 +10,7 @@
         "phug/formatter": "^0.5.6 || ^1.0.0",
         "phug/lexer": "^0.5.4 || ^1.0.0",
         "phug/parser": "^0.5.2 || ^1.0.0",
-        "phug/util": "^0.4.11 || ^1.0.0"
+        "phug/util": "^0.4.17 || ^1.0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.8.36 || ^5.7.27 || ^8.5.15"
