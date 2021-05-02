@@ -8,10 +8,8 @@ use Phug\Compiler\Event\NodeEvent;
 use Phug\Formatter\Element\AssignmentElement;
 use Phug\Formatter\Element\AttributeElement;
 use Phug\Formatter\Element\ExpressionElement;
-use Phug\Parser\Node;
 use Phug\Parser\Node\AttributeNode;
 use Phug\Parser\Node\ElementNode;
-use Phug\Parser\Node\ExpressionNode;
 use Phug\TwigExtension;
 use PugToTwig;
 
