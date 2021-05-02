@@ -8,6 +8,7 @@
         "php": ">=5.5",
         "phug/compiler": "^0.5.2 || ^1.0.0",
         "phug/formatter": "^0.5.6 || ^1.0.0",
+        "phug/parser": "^0.5.2 || ^1.0.0",
         "phug/util": "^0.4.11 || ^1.0.0"
     },
     "require-dev": {
