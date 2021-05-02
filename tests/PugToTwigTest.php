@@ -4,8 +4,14 @@ namespace Test;
 
 use PHPUnit\Framework\TestCase;
 use Phug\Compiler;
+use Phug\Compiler\Event\NodeEvent;
 use Phug\Formatter\Element\AssignmentElement;
 use Phug\Formatter\Element\AttributeElement;
+use Phug\Formatter\Element\ExpressionElement;
+use Phug\Parser\Node;
+use Phug\Parser\Node\AttributeNode;
+use Phug\Parser\Node\ElementNode;
+use Phug\Parser\Node\ExpressionNode;
 use Phug\TwigExtension;
 use PugToTwig;
 
@@ -182,6 +188,57 @@ class PugToTwigTest extends TestCase
 
         self::assertSame(
             '{% if (1 == 1) %}<div>{% if (1 != 2) %}<strong>Bye</strong>{% endif %}</div>{% endif %}',
+            $html
+        );
+    }
+
+    /**
+     * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAttributeElement
+     * @covers \Phug\Formatter\Format\TwigXmlFormat::formatAttributeFlag
+     * @group y
+     */
+    public static function testFlagAttribute()
+    {
+        $html = static::render(implode("\n", [
+            'input&attributes(["checked" => true])',
+        ]));
+
+        self::assertSame(
+            '<input checked="checked" />',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            '- attr = "checked"',
+            'input({{ attr }}=true)',
+        ]));
+
+        self::assertSame(
+            '{% attr = "checked" %}<input {{ attr }}="{{ attr }}" />',
+            $html
+        );
+
+        $html = static::render(implode("\n", [
+            '- $var = "checked"',
+            'input(dynamic=true)',
+        ]), [
+            'on_node' => function (NodeEvent $nodeEvent) {
+                $node = $nodeEvent->getNode();
+                if ($node instanceof ElementNode && $node->getName() === 'input') {
+                    /** @var AttributeNode $attribute */
+                    foreach ($node->getAttributes() as $attribute) {
+                        if ($attribute->getName() === 'dynamic') {
+                            $expression = new ExpressionElement();
+                            $expression->setValue('$var');
+                            $attribute->setName($expression);
+                        }
+                    }
+                }
+            },
+        ]);
+
+        self::assertSame(
+            '{% $var = "checked" %}<input {{ $__value=$var }}="{{ $__value }}" />',
             $html
         );
     }
