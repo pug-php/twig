@@ -47,6 +47,7 @@ class PugToTwigTest extends TestCase
      * @covers \Phug\Formatter\AbstractTwigFormat::formatElementChildren
      * @covers \Phug\Formatter\AbstractTwigFormat::formatTwigChildElement
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__construct
+     * @covers \Phug\Formatter\Format\TwigXmlFormat::provideTwigArrayEscape
      * @covers \Phug\Formatter\Format\TwigXmlFormat::addAttributeAssignment
      * @covers \Phug\Formatter\Format\TwigXmlFormat::__invoke
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag

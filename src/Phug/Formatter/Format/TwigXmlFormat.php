@@ -64,6 +64,9 @@ class TwigXmlFormat extends AbstractTwigFormat
         }
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     private function provideTwigArrayEscape()
     {
         if (!method_exists($this, 'provideArrayEscape')) {
