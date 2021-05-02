@@ -51,7 +51,7 @@ class TwigXmlFormat extends AbstractTwigFormat
             ->provideAttributeAssignment()
             ->provideStandAloneAttributeAssignment()
             ->provideMergeAttributes()
-            ->provideArrayEscape()
+            ->provideTwigArrayEscape()
             ->provideAttributesAssignment()
             ->provideClassAttributeAssignment()
             ->provideStandAloneClassAttributeAssignment()
@@ -62,6 +62,18 @@ class TwigXmlFormat extends AbstractTwigFormat
         foreach ($handlers as $name => $handler) {
             $this->addAttributeAssignment($name, $handler);
         }
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function provideTwigArrayEscape()
+    {
+        if (!method_exists($this, 'provideArrayEscape')) {
+            return $this;
+        }
+
+        return $this->provideArrayEscape();
     }
 
     protected function addAttributeAssignment($name, $handler)
@@ -129,30 +141,7 @@ class TwigXmlFormat extends AbstractTwigFormat
                 return '';
             }
             if (strtolower($value->getValue()) === 'true') {
-                $formattedValue = null;
-                if ($name instanceof ExpressionElement) {
-                    $bufferVariable = $this->pattern('buffer_variable');
-                    $name = $this->pattern(
-                        'php_display_code',
-                        $this->pattern(
-                            'save_value',
-                            $bufferVariable,
-                            $this->formatCode($name->getValue(), $name->isChecked())
-                        )
-                    );
-                    $value = new ExpressionElement($bufferVariable);
-                    $formattedValue = $this->format($value);
-                }
-                $formattedName = $this->format($name);
-                $formattedValue = $formattedValue || $formattedValue === '0'
-                    ? $formattedValue
-                    : $formattedName;
-
-                return $this->pattern(
-                    'boolean_attribute_pattern',
-                    $formattedName,
-                    $formattedValue
-                );
+                return $this->formatAttributeFlag($name);
             }
             if (in_array(strtolower($value->getValue()), ['false', 'null', 'undefined'])) {
                 return '';
@@ -163,6 +152,36 @@ class TwigXmlFormat extends AbstractTwigFormat
             'attribute_pattern',
             $this->format($name),
             $this->format($value)
+        );
+    }
+
+    protected function formatAttributeFlag($name)
+    {
+        $formattedValue = null;
+
+        if ($name instanceof ExpressionElement) {
+            $bufferVariable = $this->pattern('buffer_variable');
+            $name = $this->pattern(
+                'php_display_code',
+                $this->pattern(
+                    'save_value',
+                    $bufferVariable,
+                    $this->formatCode($name->getValue(), $name->isChecked())
+                )
+            );
+            $value = new ExpressionElement($bufferVariable);
+            $formattedValue = $this->format($value);
+        }
+
+        $formattedName = $this->format($name);
+        $formattedValue = $formattedValue || $formattedValue === '0'
+            ? $formattedValue
+            : $formattedName;
+
+        return $this->pattern(
+            'boolean_attribute_pattern',
+            $formattedName,
+            $formattedValue
         );
     }
 
