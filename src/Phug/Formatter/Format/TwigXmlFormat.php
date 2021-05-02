@@ -51,7 +51,7 @@ class TwigXmlFormat extends AbstractTwigFormat
             ->provideAttributeAssignment()
             ->provideStandAloneAttributeAssignment()
             ->provideMergeAttributes()
-            ->provideArrayEscape()
+            ->provideTwigArrayEscape()
             ->provideAttributesAssignment()
             ->provideClassAttributeAssignment()
             ->provideStandAloneClassAttributeAssignment()
@@ -62,6 +62,15 @@ class TwigXmlFormat extends AbstractTwigFormat
         foreach ($handlers as $name => $handler) {
             $this->addAttributeAssignment($name, $handler);
         }
+    }
+
+    private function provideTwigArrayEscape()
+    {
+        if (!method_exists($this, 'provideArrayEscape')) {
+            return $this;
+        }
+
+        return $this->provideArrayEscape();
     }
 
     protected function addAttributeAssignment($name, $handler)
