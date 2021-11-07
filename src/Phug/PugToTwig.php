@@ -65,9 +65,11 @@ class PugToTwig extends AbstractCompilerModule
         if (!isset($options['default_format'])) {
             $options['default_format'] = static::$defaultFormat;
         }
+
         if (!isset($options['formats'])) {
             $options['formats'] = static::$formats;
         }
+
         $compiler = new Compiler($options);
 
         return $compiler->compile($pugCode);

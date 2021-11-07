@@ -416,4 +416,28 @@ class PugToTwigTest extends TestCase
             $compiler->getFormatter()->formatCode('$myPhpStyleVariable', true)
         );
     }
+
+    public function testInclude()
+    {
+        $compiler = new Compiler([
+            'compiler_modules' => [TwigExtension::class],
+        ]);
+
+        self::assertSame(
+            '<div class="container"><div id="inner">Hop<p>Inner</p></div></div>',
+            $compiler->compileFile(__DIR__.'/a.pug')
+        );
+    }
+
+    public function testExtend()
+    {
+        $compiler = new Compiler([
+            'compiler_modules' => [TwigExtension::class],
+        ]);
+
+        self::assertSame(
+            '<body><p>Hello</p></body>',
+            $compiler->compileFile(__DIR__.'/c.pug')
+        );
+    }
 }
