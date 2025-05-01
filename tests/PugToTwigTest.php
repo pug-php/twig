@@ -254,7 +254,6 @@ class PugToTwigTest extends TestCase
             '{% if foo %}<div>Condition one</div>{% elseif bar %}<div>Another condition</div>{% endif %}',
             $html
         );
-
     }
 
     /**
@@ -347,7 +346,9 @@ class PugToTwigTest extends TestCase
 
     /**
      * @covers                   \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
+     *
      * @expectedException        \Phug\FormatterException
+     *
      * @expectedExceptionMessage input is a self closing element: <input/> but contains nested content
      */
     public static function testNestedInSelfClosing()
@@ -357,7 +358,9 @@ class PugToTwigTest extends TestCase
 
     /**
      * @covers                   \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
+     *
      * @expectedException        \Phug\FormatterException
+     *
      * @expectedExceptionMessage input is a self closing element: <input/> but contains nested content
      */
     public static function testMissingAssignment()
