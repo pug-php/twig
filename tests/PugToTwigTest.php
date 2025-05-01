@@ -241,6 +241,21 @@ class PugToTwigTest extends TestCase
         );
     }
 
+    public function testElseIf()
+    {
+        $html = static::compile(implode("\n", [
+            '- if foo',
+            '  div Condition one',
+            '- elseif bar',
+            '  div Another condition',
+        ]));
+
+        self::assertSame(
+            '{% if foo %}<div>Condition one</div>{% elseif bar %}<div>Another condition</div>{% endif %}',
+            $html
+        );
+    }
+
     /**
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
      * @covers \Phug\Formatter\Format\TwigXmlFormat::isBlockTag
@@ -331,7 +346,9 @@ class PugToTwigTest extends TestCase
 
     /**
      * @covers                   \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
+     *
      * @expectedException        \Phug\FormatterException
+     *
      * @expectedExceptionMessage input is a self closing element: <input/> but contains nested content
      */
     public static function testNestedInSelfClosing()
@@ -341,7 +358,9 @@ class PugToTwigTest extends TestCase
 
     /**
      * @covers                   \Phug\Formatter\Format\TwigXmlFormat::isSelfClosingTag
+     *
      * @expectedException        \Phug\FormatterException
+     *
      * @expectedExceptionMessage input is a self closing element: <input/> but contains nested content
      */
     public static function testMissingAssignment()
