@@ -199,9 +199,9 @@ abstract class AbstractTwigFormat extends XhtmlFormat
         $hasBlocks = false;
         $input = $this->restoreBlockSubstitutes($input, ' %%}%s{%% ', $hasBlocks);
         if ($hasBlocks) {
-            $statement = preg_replace('/^([^\\{]+)\\{.*$/', '$1', $statement);
+            $statement = preg_replace('/^([^{]+)\{.*$/', '$1', $statement);
             if (in_array($statement, $this->statements)) {
-                $input .= 'end'.preg_replace('/^else/', 'if', $statement);
+                $input .= 'end'.preg_replace('/^(?:elseif|else)/', 'if', $statement);
             }
         }
 
