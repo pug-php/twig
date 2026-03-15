@@ -39,6 +39,7 @@ jobs:
     - name: Install dependencies
       if: steps.composer-cache.outputs.cache-hit != 'true'
       run: |
+        ${{ matrix.php < 7.1 && 'composer require --no-update "phug/compiler:^1" --no-interaction;' || '' }}
         ${{ matrix.php >= 7.3 && 'composer require --no-update "pug-php/pug:^2.7.5||^3.0" --no-interaction;' || '' }}
         ${{ matrix.php >= 7.4 && 'composer require --no-update "pug-php/pug:^2.7.6||^3.0" --no-interaction;' || '' }}
         ${{ matrix.php >= 8 && 'composer require --no-update phpunit/phpunit:^8.5.15 --no-interaction;' || '' }}
